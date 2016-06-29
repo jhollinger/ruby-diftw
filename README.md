@@ -53,6 +53,8 @@ If you want to use singleton objects, initialize your injector like this:
     widget1.bar.object_id == widget2.bar.object_id
     => true
 
+Accessing injected singletons **is thread safe**. However, registering them is not.
+
 ## DI in tests
 
     # Presumably your injector is already initialized.

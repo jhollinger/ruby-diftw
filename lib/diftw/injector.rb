@@ -2,28 +2,31 @@ module DiFtw
   class Injector
     attr_reader :singleton
     attr_reader :registry
-    private :registry
+    attr_reader :mutexes
+    private :registry, :mutexes
 
     def initialize(singleton: false, &registrator)
-      @registry = {}
+      @registry, @mutexes = {}, {}
       @singleton = singleton
       instance_eval &registrator if registrator
     end
 
     def register(name, y = nil, &block)
       registry[name] = y || block
+      mutexes[name] = Mutex.new if singleton
       self
     end
 
     def []=(name, y)
-      registry[name] = y
-      self
+      register name, y
     end
 
     def [](name)
       if singleton
         var = "@_singleton_#{name}"
-        instance_variable_get(var) || instance_variable_set(var, registry.fetch(name).call)
+        instance_variable_get(var) || mutexes[name].synchronize {
+          instance_variable_get(var) || instance_variable_set(var, registry.fetch(name).call)
+        }
       else
         registry.fetch(name).call
       end
