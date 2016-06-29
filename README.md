@@ -55,6 +55,19 @@ If you want to use singleton objects, initialize your injector like this:
 
 Accessing injected singletons **is thread safe**. However, registering them is not.
 
+## Lazy, Nested Dependencies
+
+Because dependencies are lazily injected, they can reference other dependencies:
+
+    Injector[:ab] = -> { Injector[:a] + Injector[:b] }
+    Injector[:a] = -> { 'A' }
+    Injector[:b] = -> { 'B' }
+
+    class Spline
+      include Injector.inject(:ab)
+    end
+    puts Spline.new.ab
+    => 'AB'
 ## DI in tests
 
     # Presumably your injector is already initialized.
