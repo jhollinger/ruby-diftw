@@ -18,4 +18,13 @@ class InjectorTest < Minitest::Test
     assert x.respond_to?(:bar)
     refute x.respond_to?(:baz)
   end
+
+  def test_lazy
+    @injector[:ab] = -> { @injector[:a] + @injector[:b] }
+    @injector[:a] = -> { 'A' }
+    @injector[:b] = -> { 'B' }
+    klass = Class.new
+    klass.send(:include, @injector.inject(:ab))
+    assert_equal 'AB', klass.new.ab
+  end
 end
