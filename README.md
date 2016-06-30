@@ -14,7 +14,7 @@ Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *lib
       end
     end
 
-    # Or like this
+    # Or register them like this
     Injector.register :bar do
       OpenStruct.new(message: "Bar")
     end
@@ -26,7 +26,7 @@ Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *lib
     puts Injector[:foo].message
     => "Foo"
 
-    # Inject some dependencies into a class
+    # Inject some dependencies into your class
     class Widget
       include Injector.inject(:foo, :bar)
     end
@@ -57,21 +57,24 @@ Accessing injected singletons **is thread safe**. However, registering them is n
 
 ## Lazy, Nested Dependencies
 
-Because dependencies are lazily injected, they can reference other dependencies:
-
+    # Define your class and tell it to inject :ab into instances
     class Spline
       include Injector.inject(:ab)
     end
+    
+    # Init a Spline instance. Doesn't matter that :ab isn't registered; just don't call spline.ab yet.
     spline = Spline.new
 
+    # Register :ab, which uses :a and :b. The order you register them in doesn't matter.
     Injector[:ab] = -> { Injector[:a] + Injector[:b] }
     Injector[:a] = -> { 'A' }
     Injector[:b] = -> { 'B' }
 
+    # The :ab dependency isn't actually injected until .ab is called!
     puts spline.ab
     => 'AB'
 ## DI in tests
 
     # Presumably your injector is already initialized.
-    # Just re-register the dependencies you need for your tests.
+    # Simply re-register the dependencies you need for your tests.
     Injector[:foo] = -> { OpenStruct.new(message: 'Test Foo') }
