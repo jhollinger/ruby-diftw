@@ -2,7 +2,7 @@
 
 Dependency Injection For The Win! A small gem for simple, yet flexible, dependency injection in Ruby.
 
-Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *library* in Ruby. Probably true, but only in the pedantic sense that you don't a DI library for *any* language. But I'll take a nice, idiomatic DI library over "just pass every dependency to all your constructors!" any day. But I couldn't find one, so I wrote this.
+Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *library* in Ruby. Probably true, but only in the pedantic sense that you don't a DI library for *any* language. But I'll take a nice, idiomatic DI library over "just pass every dependency to all your constructors!" any day. I couldn't find one, so I wrote this.
 
 ## Basic Use
 
