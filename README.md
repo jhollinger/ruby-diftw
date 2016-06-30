@@ -2,7 +2,7 @@
 
 Dependency Injection For The Win! A small gem for simple, yet flexible, dependency injection in Ruby.
 
-Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *library* in Ruby. True enough. But sometimes having a "thing" to use is helpful mentally. And if it's well-designed, it won't get in your way. DiFtw doesn't even hijack your `initialize` methods. That means it works with ActiveRecord models and anything else that already has an `initialize` method.
+Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *library* in Ruby. Probably true, but only in the pedantic sense that you don't a DI library for *any* language. But I'll take a nice, idiomatic DI library over "just pass every dependency to all your constructors!" any day. But I couldn't find one, so I wrote this.
 
 ## Basic Use
 
@@ -29,6 +29,11 @@ Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *lib
     # Inject some dependencies into your class
     class Widget
       include Injector.inject(:foo, :bar)
+      
+      def initialize(random_arg)
+        # Unlike most DI, it doesn't hijack your initializer! Because Ruby!!1!
+        @random_arg = random_arg
+      end
     end
 
     # Now they're instance methods!
