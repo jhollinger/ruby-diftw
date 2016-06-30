@@ -59,14 +59,16 @@ Accessing injected singletons **is thread safe**. However, registering them is n
 
 Because dependencies are lazily injected, they can reference other dependencies:
 
+    class Spline
+      include Injector.inject(:ab)
+    end
+    spline = Spline.new
+
     Injector[:ab] = -> { Injector[:a] + Injector[:b] }
     Injector[:a] = -> { 'A' }
     Injector[:b] = -> { 'B' }
 
-    class Spline
-      include Injector.inject(:ab)
-    end
-    puts Spline.new.ab
+    puts spline.ab
     => 'AB'
 ## DI in tests
 
