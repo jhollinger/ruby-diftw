@@ -2,7 +2,7 @@
 
 Dependency Injection For The Win! A small gem for simple, yet flexible, dependency injection in Ruby.
 
-Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *library* in Ruby. Probably true, but only in the pedantic sense that you don't a DI library for *any* language. But I'll take a nice, idiomatic DI library over "just pass every dependency to all your constructors!" any day. I couldn't find one, so I wrote this.
+Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *library* in Ruby. Probably true, but only in the pedantic sense that you don't need a DI library for *any* language. But I'll take a nice, idiomatic DI library over "just manually pass in every dependency to all your constructors!" any day. I couldn't find one, so I wrote this.
 
 ## Basic Use
 
@@ -19,12 +19,8 @@ Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *lib
       OpenStruct.new(message: "Bar")
     end
 
-    # Or this
+    # Or with a lambda
     Injector[:baz] = -> { OpenStruct.new(message: "Baz") }
-
-    # Manually grab a dependency
-    puts Injector[:foo].message
-    => "Foo"
 
     # Inject some dependencies into your class
     class Widget
