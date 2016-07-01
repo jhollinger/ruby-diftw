@@ -1,13 +1,13 @@
 require_relative './test_helper'
 
-class SingletonTest < Minitest::Test
+class NonSingletonTest < Minitest::Test
   def setup
-    @injector = DiFtw::Injector.new(singleton: true)
+    @injector = DiFtw::Injector.new(singleton: false)
     @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
   end
 
-  def test_same_object_each_call
+  def test_different_object_each_call
     id1, id2 = @injector[:foo].object_id, @injector[:foo].object_id
-    assert_equal id1, id2
+    refute_equal id1, id2
   end
 end

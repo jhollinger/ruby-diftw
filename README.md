@@ -37,22 +37,26 @@ Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *lib
     puts widget.bar.message
     => "Bar"
 
-## Singleton Injector
+## Singletons By Default
 
-By default the injector *does not* use singletons. Observe:
+By default the injector injects singletons. Observe:
 
     widget1, widget2 = Widget.new, Widget.new
+    widget1.bar.object_id == widget1.bar.object_id
+    => true
     widget1.bar.object_id == widget2.bar.object_id
-    => false
+    => true
 
-If you want to use singleton objects, initialize your injector like this:
+If you *don't* want your injector to return singletons (i.e. get a new copy each time you inject), initialize your injector like this:
 
-    Injector = DiFtw::Injector.new(singleton: true)
+    Injector = DiFtw::Injector.new(singleton: false)
     Injector[:bar] = -> { OpenStruct.new(message: 'Bar') }
     ...
     widget1, widget2 = Widget.new, Widget.new
-    widget1.bar.object_id == widget2.bar.object_id
+    widget1.bar.object_id == widget1.bar.object_id
     => true
+    widget1.bar.object_id == widget2.bar.object_id
+    => false
 
 Accessing injected singletons **is thread safe**. However, registering them is not.
 
@@ -74,6 +78,7 @@ Accessing injected singletons **is thread safe**. However, registering them is n
     # The :ab dependency isn't actually injected until .ab is called!
     puts spline.ab
     => 'AB'
+
 ## DI in tests
 
     # Presumably your injector is already initialized.

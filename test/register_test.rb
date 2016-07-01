@@ -26,9 +26,9 @@ class RegisterTest < Minitest::Test
     assert_equal 'Foo', @injector[:foo].message
   end
 
-  def test_new_proc_call_each_time
+  def test_singleton_by_defeault
     @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
     id1, id2 = @injector[:foo].object_id, @injector[:foo].object_id
-    refute_equal id1, id2
+    assert_equal id1, id2
   end
 end
