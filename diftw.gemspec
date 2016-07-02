@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   gem.date = '2016-06-29'
 
   gem.description = 'A small dependency injection library for Ruby'
-  gem.summary = 'Dead-simple DI in Ruby'
+  gem.summary = 'Dependency Injection For The Win!'
   gem.homepage = 'https://github.com/jhollinger/ruby-diftw'
 
   gem.authors = ['Jordan Hollinger']
