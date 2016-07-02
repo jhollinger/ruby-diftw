@@ -62,6 +62,7 @@ module DiFtw
     # @return [Injector] returns the Injector object
     #
     def register(name, y = nil, &block)
+      instance_variable_set "@_singleton_#{name}", nil
       registry[name] = y || block
       mutexes[name] = Mutex.new if singleton
       self
