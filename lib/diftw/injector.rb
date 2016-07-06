@@ -116,6 +116,26 @@ module DiFtw
       end
     end
 
+    #
+    # Injects dependencies into a specific, existing object.
+    #
+    #   DI.inject_instance(obj, :foo, :bar)
+    #
+    # @param instance [Object] The object you wish to inject dependencies into
+    # @param dependencies [Symbol] All dependency names you want to inject.
+    #
+	def inject_instance(instance, *dependencies)
+	  injector = self
+	  instance.instance_eval do
+		dependencies.each do |dep|
+		  define_singleton_method dep do
+			var = "@_diftw_#{dep}"
+			instance_variable_get(var) || instance_variable_set(var, injector[dep])
+		  end
+		end
+	  end
+	end
+
     private
 
     #
