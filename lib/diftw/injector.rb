@@ -26,6 +26,8 @@ module DiFtw
   #   end
   #
   class Injector
+    # @return [DiFtw::Injector] The parent injector, if any
+    attr_reader :parent
     # @return [Boolean] If true, the Injector injects singleton objects
     attr_reader :singleton
     # @return [Hash] A Hash containing all registered depencies (as procs) keyed by Symbols
@@ -33,7 +35,8 @@ module DiFtw
     # @return [Hash] A Hash containing a Mutex for each dependency (only if singleton == true)
     attr_reader :mutexes
 
-    private :registry, :mutexes
+    protected :registry, :mutexes
+    private :parent
 
     #
     # Instantiate a new Injector.
@@ -42,9 +45,11 @@ module DiFtw
     #
     # @param singleton [Boolean] If true, each dependency will only be initialized once. When false, it will be initialized each time it's injected.
     #
-    def initialize(singleton: true, &registrator)
-      @registry, @mutexes = {}, {}
-      @singleton = singleton
+    def initialize(singleton: true, parent: nil, &registrator)
+      @registry, @parent = {}, parent
+      @singleton = parent ? parent.singleton : singleton
+      @mutexes = (parent ? parent.mutexes.keys : []).
+        inject({}) { |a, name| a[name] = Mutex.new; a }
       instance_eval &registrator if registrator
     end
 
@@ -62,9 +67,11 @@ module DiFtw
     # @return [Injector] returns the Injector object
     #
     def register(name, y = nil, &block)
-      instance_variable_set "@_singleton_#{name}", nil
       registry[name] = y || block
-      mutexes[name] = Mutex.new if singleton
+      if singleton
+        instance_variable_set "@_singleton_#{name}", nil
+        mutexes[name] ||= Mutex.new
+      end
       self
     end
 
@@ -92,10 +99,10 @@ module DiFtw
       if singleton
         var = "@_singleton_#{name}"
         instance_variable_get(var) || mutexes[name].synchronize {
-          instance_variable_get(var) || instance_variable_set(var, registry.fetch(name).call)
+          instance_variable_get(var) || instance_variable_set(var, fetch(name).call)
         }
       else
-        registry.fetch(name).call
+        fetch(name).call
       end
     end
 
@@ -110,10 +117,7 @@ module DiFtw
     # @param dependencies [Symbol] All dependency names you want to inject.
     #
     def inject(*dependencies)
-      injector_module.tap do |mod|
-        mod._diftw_injector = self
-        mod._diftw_dependencies = dependencies
-      end
+      injector_module dependencies
     end
 
     #
@@ -125,28 +129,38 @@ module DiFtw
     # @param dependencies [Symbol] All dependency names you want to inject.
     #
 	def inject_instance(instance, *dependencies)
-	  injector = self
-	  instance.instance_eval do
-		dependencies.each do |dep|
-		  define_singleton_method dep do
-			var = "@_diftw_#{dep}"
-			instance_variable_get(var) || instance_variable_set(var, injector[dep])
-		  end
-		end
-	  end
+      mod = injector_module dependencies
+      instance.singleton_class.send :include, mod
 	end
+
+    protected
+
+    #
+    # Recursively look up a dependency
+    #
+    # @param dependency [Symbol] name of dependency
+    # @return [Proc]
+    #
+    def fetch(dependency)
+      if parent.nil?
+        registry.fetch dependency
+      else
+        registry[dependency] || parent.fetch(dependency)
+      end
+    end
 
     private
 
     #
     # Builds a new module that, when included in a class, defines instance methods for each dependecy.
     #
-    # @return a new module
+    # @param dependencies [Symbol] All dependency names you want to inject.
+    # @return [Module] A module with accessor methods defined for each dependency
     #
-    def injector_module
-      Module.new do
+    def injector_module(dependencies)
+      Module.new {
         class << self
-          attr_accessor :_diftw_injector, :_diftw_dependencies
+          attr_accessor :injector, :_diftw_dependencies
         end
 
         def self.included(base)
@@ -155,12 +169,15 @@ module DiFtw
             di_mod._diftw_dependencies.each do |dep|
               define_method dep do
                 var = "@_diftw_#{dep}"
-                instance_variable_get(var) || instance_variable_set(var, di_mod._diftw_injector[dep])
+                instance_variable_get(var) || instance_variable_set(var, di_mod.injector[dep])
               end
             end
           end
         end
-      end
+      }.tap { |mod|
+        mod.injector = Injector.new(parent: self)
+        mod._diftw_dependencies = dependencies
+      }
     end
   end
 end
