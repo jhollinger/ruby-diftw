@@ -1,83 +1,111 @@
 # DiFtw
 
-Dependency Injection For The Win! A small gem for simple, yet flexible, dependency injection in Ruby.
+Dependency Injection For The Win! A small, yet surprisingly powerful, dependency injection library for Ruby.
 
-Some say you don't need DI in Ruby. Perhaps. Others say you don't need a DI *library* in Ruby. Probably true, but only in the pedantic sense that you don't need a DI library for *any* language. But I'll take a nice, idiomatic DI library over "just manually pass in every dependency to all your constructors!" any day. I couldn't find one, so I wrote this.
+**NOTE** This library is pre-1.0 and under active development. It's perfectly usable, but expect breaking API or behavior changes until 1.0.
 
-## Basic Use
+### Why DI in Ruby?
 
-    # Create your injector
-    Injector = DiFtw::Injector.new do
-      # Register some dependencies
+If your only concern is testing, mocks/stubs and `webmock` might be all you need. But if you're working on a large project that hooks into all kinds of enterprisey services, and those services aren't always available in dev/testing/staging, a dash of DI might be just the thing.
+
+### Features
+
+* Dead-simple registration API
+* Lazy injection (by default)
+* Inject into all instances, a single instance, a class, or a module
+* Injects singletons (by default)
+* Uses parent-child injectors for max flexibility
+* Threadsafe, except for registration
+
+## Dead-simple registration API
+
+    # Create your root injector
+    DI = DiFtw::Injector.new do
+      # Register some dependencies in here
       register :foo do
         OpenStruct.new(message: "Foo")
       end
     end
 
-    # Or register them like this
-    Injector.register :bar do
+    # Or register them out here
+    DI.register :bar do
       OpenStruct.new(message: "Bar")
     end
 
-    # Or with a lambda
-    Injector[:baz] = -> { OpenStruct.new(message: "Baz") }
+    # Or register them with procs
+    DI[:baz] = -> { OpenStruct.new(message: "Baz") }
 
-    # Inject some dependencies into your class
+## Lazy injection (by default)
+
     class Widget
-      include Injector.inject(:foo, :bar)
+      include DI.inject :foo, :bar
+    end
+    
+    widget = Widget.new
+    # foo isn't actually injected until it's first called
+    puts widget.foo.message
+    => "Foo"
+
+Lazy injection is usually fine. But if it isn't, use `inject!`:
+
+    class Widget
+      include DI.inject :foo, :bar
       
-      def initialize(random_arg)
-        # Unlike most DI, it doesn't hijack your initializer! Because Ruby!!1!
-        @random_arg = random_arg
+      def initialize
+        inject!
       end
     end
-
-    # Now they're instance methods!
+    
+    # foo and bar are immediately injected
     widget = Widget.new
-    puts widget.bar.message
-    => "Bar"
 
-## Singletons By Default
+## Inject into all instances, a single instance, a class, or a module
 
-By default the injector injects singletons. Observe:
+    # Inject :baz into all Widget instance objects
+    class Widget
+      include DI.inject :baz
+    end
+    puts Widget.new.baz.message
+    => 'Baz'
+    
+    # Inject :baz into one specific instance
+    x = SomeClass.new
+    DI.inject_instance x, :baz
+    puts x.baz.message
+    => 'Baz'
+    
+    # Inject :baz as a class method
+    class SomeClass
+      DI.inject_instance self, :baz
+    end
+    puts SomeClass.baz.message
+    => 'Baz'
 
-    widget1, widget2 = Widget.new, Widget.new
-    widget1.bar.object_id == widget1.bar.object_id
+    # Inject :baz as a module method 
+    module SomeModule
+      DI.inject_instance self, :baz
+    end
+    puts SomeModule.baz.message
+    => 'Baz'
+
+## Injects singletons (by default)
+
+    Widget.new.bar.object_id == Widget.new.bar.object_id
     => true
-    widget1.bar.object_id == widget2.bar.object_id
-    => true
 
-If you *don't* want your injector to return singletons (i.e. get a new copy each time you inject), initialize your injector like this:
+If you *don't* want your injector to return singletons (i.e. get a new copy each time you inject something), initialize your injector like this:
 
-    Injector = DiFtw::Injector.new(singleton: false)
-    Injector[:bar] = -> { OpenStruct.new(message: 'Bar') }
+    DI = DiFtw::Injector.new(singleton: false)
+    DI[:bar] = -> { OpenStruct.new(message: 'Bar') }
     ...
-    widget1, widget2 = Widget.new, Widget.new
-    widget1.bar.object_id == widget1.bar.object_id
-    => true
-    widget1.bar.object_id == widget2.bar.object_id
+    Widget.new.bar.object_id == Widget.new.bar.object_id
     => false
 
 Accessing injected singletons **is thread safe**. However, registering them is not.
 
-## Lazy, Nested Dependencies
+## Parent-Child injectors
 
-    # Define your class and tell it to inject :ab into instances
-    class Spline
-      include Injector.inject(:ab)
-    end
-    
-    # Init a Spline instance. Doesn't matter that :ab isn't registered; just don't call spline.ab yet.
-    spline = Spline.new
-
-    # Register :ab, which uses :a and :b. The order you register them in doesn't matter.
-    Injector[:ab] = -> { Injector[:a] + Injector[:b] }
-    Injector[:a] = -> { 'A' }
-    Injector[:b] = -> { 'B' }
-
-    # The :ab dependency isn't actually injected until .ab is called!
-    puts spline.ab
-    => 'AB'
+This is maybe the coolest part. TODO
 
 ## DI in tests
 
