@@ -122,6 +122,8 @@ This means you can re-register a dependency on your child injector, and *it* wil
     end
     
     # Widget and Spline each get a new injector instance
+    Widget.injector.object_id != DI.object_id
+    => true
     Widget.injector.object_id != Spline.injector.object_id
     => true
     
