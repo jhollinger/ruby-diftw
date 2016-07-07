@@ -99,10 +99,10 @@ module DiFtw
       if singleton
         var = "@_singleton_#{name}"
         instance_variable_get(var) || mutexes[name].synchronize {
-          instance_variable_get(var) || instance_variable_set(var, fetch(name).call)
+          instance_variable_get(var) || instance_variable_set(var, resolve!(name))
         }
       else
-        fetch(name).call
+        resolve! name
       end
     end
 
@@ -141,11 +141,13 @@ module DiFtw
     # @param dependency [Symbol] name of dependency
     # @return [Proc]
     #
-    def fetch(dependency)
+    def resolve!(dependency)
       if parent.nil?
-        registry.fetch dependency
+        registry.fetch(dependency).call
+      elsif registry.has_key? dependency
+        registry[dependency].call
       else
-        registry[dependency] || parent.fetch(dependency)
+        parent[dependency]
       end
     end
 
@@ -166,10 +168,20 @@ module DiFtw
         def self.included(base)
           di_mod = self
           base.class_eval do
+            # Set the injector for the whole class
+            class << self; attr_reader :injector; end
+            @injector = di_mod.injector
+
+            # Create a new injector for each instance
+            define_method :injector do
+              @injector ||= Injector.new(parent: di_mod.injector)
+            end
+
+            # Define instance accessor methods
             di_mod._diftw_dependencies.each do |dep|
               define_method dep do
                 var = "@_diftw_#{dep}"
-                instance_variable_get(var) || instance_variable_set(var, di_mod.injector[dep])
+                instance_variable_get(var) || instance_variable_set(var, self.injector[dep])
               end
             end
           end
