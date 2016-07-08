@@ -135,8 +135,7 @@ This means you can re-register a dependency on your child injector, and *it* wil
     w2 = Widget.new
     w1.injector.object_id != w2.injector.object_id
     => true
-    w1.injector
-    
+
     # But all those child injectors are empty. They'll all resolve :foo
     # to whatever is in DI[:foo]
     Widget.new.foo.object_id == Spline.new.foo.object_id
