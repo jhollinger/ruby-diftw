@@ -138,6 +138,10 @@ This means you can re-register a dependency on your child injector, and *it* wil
 
     # But all those child injectors are empty. They'll all resolve :foo
     # to whatever is in DI[:foo]
+    Widget.new.foo
+    => 'Foo'
+    Spline.new.foo
+    => 'Foo'
     Widget.new.foo.object_id == Spline.new.foo.object_id
     => true
     
