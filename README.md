@@ -174,3 +174,19 @@ To inject different dependencies in these environments, you have several options
     DI[:foo] = -> { OpenStruct.new(message: 'Test Foo') }
     
 And you can use the parent-child injector features described above.
+
+### Injecting in before(:each)
+
+If you want to re-inject something into a class's injector in something like rspec's `before(:each)`:
+
+    before :each do
+      # Give all MyService instances 'Test foo' as #foo
+      MyService.injector[:foo] = -> {
+        'Test foo'
+      }
+    end
+
+    after :each do
+      # Remove the override & fallback to whatever was registered in the root injector
+      MyService.injector.delete :foo
+    end

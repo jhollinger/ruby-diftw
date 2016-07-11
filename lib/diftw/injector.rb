@@ -64,7 +64,7 @@ module DiFtw
     #
     # @param name [Symbol] name of the dependency
     # @param y [Proc] the dependency wrapped in a Proc or block
-    # @return [Injector] returns the Injector object
+    # @return [DiFtw::Injector] returns the Injector object
     #
     def register(name, y = nil, &block)
       registry[name] = y || block
@@ -104,6 +104,21 @@ module DiFtw
       else
         resolve! name
       end
+    end
+
+    #
+    # Unregisters the dependency from this injector instance. This means requests for this dependency
+    # will continue on up the chain.
+    #
+    # @param name [Symbol] name of the dependency
+    # @return [DiFtw::Injector] returns the Injector object
+    #
+    def delete(name)
+      registry.delete name
+      if singleton
+        instance_variable_set "@_singleton_#{name}", nil
+      end
+      self
     end
 
     #

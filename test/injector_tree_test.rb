@@ -101,4 +101,16 @@ class InjectorTreeTest < Minitest::Test
     di[:foo] = -> { OpenStruct.new(message: 'Foo!!1!') }
     assert_equal 'Foo!!1!', x.foo.message
   end
+
+  def test_deleting_from_child_injector_sends_lookup_to_parent
+    di = @injector
+    klass = Class.new {
+      include di.inject(:foo)
+    }
+    klass.injector[:foo] = -> { OpenStruct.new(message: 'Foo!!1!') }
+    assert_equal 'Foo!!1!', klass.new.foo.message
+
+    klass.injector.delete :foo
+    assert_equal 'Foo', klass.new.foo.message
+  end
 end
