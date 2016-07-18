@@ -50,6 +50,7 @@ module DiFtw
       @singleton = parent ? parent.singleton : singleton
       @mutexes = (parent ? parent.mutexes.keys : []).
         inject({}) { |a, name| a[name] = Mutex.new; a }
+      @metamutex = Mutex.new
       instance_eval &registrator if registrator
     end
 
@@ -98,7 +99,7 @@ module DiFtw
     def [](name)
       if singleton
         var = "@_singleton_#{name}"
-        instance_variable_get(var) || mutexes[name].synchronize {
+        instance_variable_get(var) || mutex(name).synchronize {
           instance_variable_get(var) || instance_variable_set(var, resolve!(name))
         }
       else
@@ -164,6 +165,15 @@ module DiFtw
       else
         parent[dependency]
       end
+    end
+
+    private
+
+    def mutex(name)
+      return mutexes[name] unless mutexes[name].nil?
+      @metamutex.synchronize {
+        mutexes[name] = Mutex.new
+      }
     end
   end
 end
