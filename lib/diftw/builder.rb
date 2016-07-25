@@ -45,6 +45,13 @@ module DiFtw
             end
           end
         end
+
+        def self.extended(base)
+          di_mod = self
+          base.singleton_class.class_eval do
+            include di_mod
+          end
+        end
       }.tap { |mod|
         mod.injector = Injector.new(parent: parent_injector)
         mod._diftw_dependencies = dependencies

@@ -125,10 +125,17 @@ module DiFtw
     #
     # Creates and returns a new Module which contains instance methods for all the dependencies you specified.
     # Simply include this module in your class, and all it's instances will have their dependencies injected.
+    # Or extend your class with this module, and your class *itself* will have the dependencies injected.
     #
     #   class Widget
-    #     include DI.inject(:foo, :bar)
+    #     include DI.inject :foo, :bar
     #   end
+    #   Widget.new.foo
+    #
+    #   class Spline
+    #     extend Di.inject :foo
+    #   end
+    #   Spline.foo
     #
     # @param dependencies [Symbol] All dependency names you want to inject.
     #
@@ -139,7 +146,7 @@ module DiFtw
     #
     # Injects dependencies into a specific, existing object.
     #
-    #   DI.inject_instance(obj, :foo, :bar)
+    #   DI.inject_instance obj, :foo, :bar
     #
     # @param instance [Object] The object you wish to inject dependencies into
     # @param dependencies [Symbol] All dependency names you want to inject.

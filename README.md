@@ -76,14 +76,14 @@ Lazy injection is usually fine. But if it isn't, use `inject!`:
     
     # Inject :baz as a class method
     class SomeClass
-      DI.inject_instance self, :baz
+      extend DI.inject :baz
     end
     puts SomeClass.baz.message
     => 'Baz'
 
     # Inject :baz as a module method 
     module SomeModule
-      DI.inject_instance self, :baz
+      extend DI.inject :baz
     end
     puts SomeModule.baz.message
     => 'Baz'
