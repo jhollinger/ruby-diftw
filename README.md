@@ -10,16 +10,16 @@ If your only concern is testing, mocks/stubs and `webmock` might be all you need
 
 ### Features
 
-* Dead-simple registration API
+* DI container w/dead-simple registration
 * Lazy injection (by default)
-* Inject into all instances, a single instance, a class, or a module
+* Inject into each of a class's instances, a single instance, a class itself, or a module
 * Injects singletons (by default)
 * Uses parent-child injectors for max flexibility
 * Threadsafe, except for registration
 
 ## Dead-simple registration API
 
-    # Create your root injector
+    # Create your root injector/container
     DI = DiFtw::Injector.new do
       # Register some dependencies in here
       register :foo do
@@ -105,9 +105,9 @@ Accessing injected singletons **is thread safe**. However, registering them is n
 
 ## Parent-Child injectors
 
-This is **maybe the coolest part**. Each time you call `inject` (or `inject_instance`) you're creating a fresh, empty child `DiFtw::Injector`. It will recursively look up dependencies through the parent chain until it finds the nearest registration of that dependency.
+This is **maybe the coolest part**. Each time you call `inject` (or `inject_instance`) you're creating a fresh, empty child `DiFtw::Injector`. It will recursively look up dependencies through the parent chain until it finds the nearest registration of that dependency. (Heavily inspired by Angular 2's DI.)
 
-This means you can re-register a dependency on your child injector, and *it* will be injected instead of whatever is registered above it in the chain. Objects using sibling or parent injectors will remain unchanged, as they won't know about this registration override. Perhaps some examples are best.
+This means you can re-register a dependency on a child injector, and *it* will be injected instead of whatever is registered above it in the chain.
 
     # Create your root injector and register :foo
     DI = DiFtw::Injector.new
@@ -173,11 +173,7 @@ To inject different dependencies in these environments, you have several options
 
     DI[:foo] = -> { OpenStruct.new(message: 'Test Foo') }
     
-And you can use the parent-child injector features described above.
-
-### Injecting in before(:each)
-
-If you want to re-inject something into a class's injector in something like rspec's `before(:each)`:
+And/Or you can use the parent-child injector features described above to great effect:
 
     before :each do
       # Give all MyService instances 'Test foo' as #foo
