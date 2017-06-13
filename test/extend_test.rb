@@ -3,7 +3,7 @@ require_relative './test_helper'
 class ExtendTest < Minitest::Test
   def setup
     @injector = DiFtw::Injector.new
-    @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
+    @injector.singleton(:foo) { OpenStruct.new(message: 'Foo') }
   end
 
   def test_class_extending
@@ -18,7 +18,7 @@ class ExtendTest < Minitest::Test
   def test_class_extending_and_overriding
     klass = Class.new
     klass.send(:extend, @injector.inject(:foo))
-    klass.injector[:foo] = -> { OpenStruct.new(message: 'Bar') }
+    klass.injector.singleton(:foo) { OpenStruct.new(message: 'Bar') }
     assert_equal 'Bar', klass.foo.message
   end
 
@@ -40,7 +40,7 @@ class ExtendTest < Minitest::Test
   def test_module_extending_and_overriding
     mod = Module.new
     mod.send(:extend, @injector.inject(:foo))
-    mod.injector[:foo] = -> { OpenStruct.new(message: 'Bar') }
+    mod.injector.singleton(:foo) { OpenStruct.new(message: 'Bar') }
     assert_equal 'Bar', mod.foo.message
   end
 end

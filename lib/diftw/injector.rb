@@ -28,14 +28,10 @@ module DiFtw
   class Injector
     # @return [DiFtw::Injector] The parent injector, if any
     attr_reader :parent
-    # @return [Boolean] If true, the Injector injects singleton objects
-    attr_reader :singleton
     # @return [Hash] A Hash containing all registered depencies (as procs) keyed by Symbols
     attr_reader :registry
-    # @return [Hash] A Hash containing a Mutex for each dependency (only if singleton == true)
-    attr_reader :mutexes
 
-    protected :registry, :mutexes
+    protected :registry
     private :parent
 
     #
@@ -43,14 +39,8 @@ module DiFtw
     #
     #   DI = DiFtw::Injector.new
     #
-    # @param singleton [Boolean] If true, each dependency will only be initialized once. When false, it will be initialized each time it's injected.
-    #
-    def initialize(singleton: true, parent: nil, &registrator)
+    def initialize(parent: nil, &registrator)
       @registry, @parent = {}, parent
-      @singleton = parent ? parent.singleton : singleton
-      @mutexes = (parent ? parent.mutexes.keys : []).
-        inject({}) { |a, name| a[name] = Mutex.new; a }
-      @metamutex = Mutex.new
       instance_eval &registrator if registrator
     end
 
@@ -68,44 +58,46 @@ module DiFtw
     # @return [DiFtw::Injector] returns the Injector object
     #
     def register(name, y = nil, &block)
-      registry[name] = y || block
-      if singleton
-        instance_variable_set "@_singleton_#{name}", nil
-        mutexes[name] ||= Mutex.new
-      end
+      registry[name] = Dependency.new(y || block, singleton: false)
       self
     end
 
     #
-    # Register a new dependency by passing a Proc or a block.
+    # Register a new dependency as a singleton. The proc will only be called
+    # the first time, then the returned value will be stored and returned for
+    # subsequent injections. Threadsafe.
+    # 
+    #   DI.singleton :foo do
+    #     Foo
+    #   end
     #
-    #   DI[:foo] = -> { Foo }
+    #   DI.singleton :bar, -> { Bar }
     #
     # @param name [Symbol] name of the dependency
-    # @param y [Proc] the dependency wrapped in a Proc
-    #
-    def []=(name, y)
-      register name, y
+    # @param y [Proc] the dependency wrapped in a Proc or block
+    # @return [DiFtw::Injector] returns the Injector object
+    # 
+    def singleton(name, y = nil, &block)
+      registry[name] = Dependency.new(y || block, singleton: true)
+      self
     end
 
     #
-    # Fetches a dependency by name (calls the Proc/block). If this is a Singleton injector,
-    # the same object will be returned each time. Otherwise a new one will be returned each time.
-    #
-    # An application will probably never want to call this directly.
+    # Fetches a dependency by name (calls the Proc/block).
     #
     # @return whatever the Proc/block returns
     #
-    def [](name)
-      if singleton
-        var = "@_singleton_#{name}"
-        instance_variable_get(var) || mutex(name).synchronize {
-          instance_variable_get(var) || instance_variable_set(var, resolve!(name))
-        }
+    def fetch(name)
+      if parent.nil?
+        registry.fetch(name).resolve
+      elsif registry.has_key? name
+        registry[name].resolve
       else
-        resolve! name
+        parent[name]
       end
     end
+
+    alias_method :[], :fetch
 
     #
     # Unregisters the dependency from this injector instance. This means requests for this dependency
@@ -116,9 +108,6 @@ module DiFtw
     #
     def delete(name)
       registry.delete name
-      if singleton
-        instance_variable_set "@_singleton_#{name}", nil
-      end
       self
     end
 
@@ -155,32 +144,5 @@ module DiFtw
       mod = DiFtw::Builder.injector_module self, dependencies
       instance.singleton_class.send :include, mod
 	end
-
-    protected
-
-    #
-    # Recursively look up a dependency
-    #
-    # @param dependency [Symbol] name of dependency
-    # @return [Proc]
-    #
-    def resolve!(dependency)
-      if parent.nil?
-        registry.fetch(dependency).call
-      elsif registry.has_key? dependency
-        registry[dependency].call
-      else
-        parent[dependency]
-      end
-    end
-
-    private
-
-    def mutex(name)
-      return mutexes[name] unless mutexes[name].nil?
-      @metamutex.synchronize {
-        mutexes[name] = Mutex.new
-      }
-    end
   end
 end

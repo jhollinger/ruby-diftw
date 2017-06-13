@@ -3,7 +3,7 @@ require_relative './test_helper'
 class InjectorTreeTest < Minitest::Test
   def setup
     @injector = DiFtw::Injector.new
-    @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
+    @injector.singleton(:foo) { OpenStruct.new(message: 'Foo') }
   end
 
   def test_injector_builds_children
@@ -57,7 +57,7 @@ class InjectorTreeTest < Minitest::Test
       include di.inject(:foo)
     }
     x = klass.new
-    x.injector[:foo] = -> { OpenStruct.new(message: 'Foo!!1!') }
+    x.injector.singleton(:foo) { OpenStruct.new(message: 'Foo!!1!') }
     assert_equal 'Foo!!1!', x.foo.message
     assert_equal 'Foo', klass.injector[:foo].message
     assert_equal 'Foo', di[:foo].message
@@ -72,7 +72,7 @@ class InjectorTreeTest < Minitest::Test
     assert_equal 'Foo', klass.injector[:foo].message
     assert_equal 'Foo', di[:foo].message
 
-    x.injector[:foo] = -> { OpenStruct.new(message: 'Foo!!1!') }
+    x.injector.singleton(:foo) { OpenStruct.new(message: 'Foo!!1!') }
     assert_equal 'Foo!!1!', x.foo.message
     assert_equal 'Foo', klass.injector[:foo].message
     assert_equal 'Foo', di[:foo].message
@@ -86,9 +86,9 @@ class InjectorTreeTest < Minitest::Test
     x = klass.new
     assert_equal 'Foo', x.foo.message
 
-    di[:foo] = -> { OpenStruct.new(message: 'Foo!!1!') }
+    di.singleton(:foo) { OpenStruct.new(message: 'Foo!!1!') }
     assert_equal 'Foo!!1!', di[:foo].message
-    assert_equal 'Foo', klass.injector[:foo].message
+    assert_equal 'Foo!!1!', klass.injector[:foo].message
     assert_equal 'Foo', x.foo.message
   end
 
@@ -98,7 +98,7 @@ class InjectorTreeTest < Minitest::Test
       include di.inject(:foo)
     }
     x = klass.new
-    di[:foo] = -> { OpenStruct.new(message: 'Foo!!1!') }
+    di.singleton(:foo) { OpenStruct.new(message: 'Foo!!1!') }
     assert_equal 'Foo!!1!', x.foo.message
   end
 
@@ -107,7 +107,7 @@ class InjectorTreeTest < Minitest::Test
     klass = Class.new {
       include di.inject(:foo)
     }
-    klass.injector[:foo] = -> { OpenStruct.new(message: 'Foo!!1!') }
+    klass.injector.singleton(:foo) { OpenStruct.new(message: 'Foo!!1!') }
     assert_equal 'Foo!!1!', klass.new.foo.message
 
     klass.injector.delete :foo

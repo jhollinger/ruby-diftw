@@ -3,7 +3,7 @@ require_relative './test_helper'
 class InstanceInjectorTest < Minitest::Test
   def setup
     @injector = DiFtw::Injector.new
-    @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
+    @injector.singleton(:foo) { OpenStruct.new(message: 'Foo') }
   end
 
   def test_instance_injector

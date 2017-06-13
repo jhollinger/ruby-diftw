@@ -3,9 +3,9 @@ require_relative './test_helper'
 class InjectorTest < Minitest::Test
   def setup
     @injector = DiFtw::Injector.new
-    @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
-    @injector[:bar] = -> { OpenStruct.new(message: 'Bar') }
-    @injector[:baz] = -> { OpenStruct.new(message: 'Baz') }
+    @injector.singleton(:foo) { OpenStruct.new(message: 'Foo') }
+    @injector.singleton(:bar) { OpenStruct.new(message: 'Bar') }
+    @injector.singleton(:baz) { OpenStruct.new(message: 'Baz') }
   end
 
   def test_injector
@@ -20,9 +20,9 @@ class InjectorTest < Minitest::Test
   end
 
   def test_lazy_registration
-    @injector[:ab] = -> { @injector[:a] + @injector[:b] }
-    @injector[:a] = -> { 'A' }
-    @injector[:b] = -> { 'B' }
+    @injector.singleton(:ab) { @injector[:a] + @injector[:b] }
+    @injector.singleton(:a) { 'A' }
+    @injector.singleton(:b) { 'B' }
     klass = Class.new
     klass.send(:include, @injector.inject(:ab))
     assert_equal 'AB', klass.new.ab

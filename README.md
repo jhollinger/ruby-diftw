@@ -2,8 +2,6 @@
 
 Dependency Injection For The Win! A small, yet surprisingly powerful, dependency injection library for Ruby.
 
-**NOTE** This library is pre-1.0 and under active development. It's perfectly usable, but expect breaking API or behavior changes until 1.0.
-
 ### Why DI in Ruby?
 
 If your only concern is testing, mocks/stubs and `webmock` might be all you need. But if you're working on a large project that hooks into all kinds of enterprisey services, and those services aren't always available in dev/testing/staging, a dash of DI might be just the thing.
@@ -13,7 +11,7 @@ If your only concern is testing, mocks/stubs and `webmock` might be all you need
 * DI container w/dead-simple registration
 * Lazy injection (by default)
 * Inject into each of a class's instances, a single instance, a class itself, or a module
-* Injects singletons (by default)
+* Optionally injects singletons
 * Uses parent-child injectors for max flexibility
 * Threadsafe, except for registration
 
@@ -88,24 +86,22 @@ Lazy injection is usually fine. But if it isn't, use `inject!`:
     puts SomeModule.baz.message
     => 'Baz'
 
-## Injects singletons (by default)
+## Optionally injects singletons
+
+    DI = DiFtw::Injector.new do
+      singleton :bar do
+        OpenStruct.new(message: 'Bar')
+      end
+    end
 
     Widget.new.bar.object_id == Widget.new.bar.object_id
     => true
-
-If you *don't* want your injector to return singletons (i.e. get a new copy each time you inject something), initialize your injector like this:
-
-    DI = DiFtw::Injector.new(singleton: false)
-    DI[:bar] = -> { OpenStruct.new(message: 'Bar') }
-    ...
-    Widget.new.bar.object_id == Widget.new.bar.object_id
-    => false
 
 Accessing injected singletons **is thread safe**. However, registering them is not.
 
 ## Parent-Child injectors
 
-This is **maybe the coolest part**. Each time you call `inject` (or `inject_instance`) you're creating a fresh, empty child `DiFtw::Injector`. It will recursively look up dependencies through the parent chain until it finds the nearest registration of that dependency. (Heavily inspired by Angular 2's DI.)
+This is **maybe the coolest part**. Each time you call `inject` (or `inject_instance`) you're creating a fresh, empty child `DiFtw::Injector`. It will recursively look up dependencies through the parent chain until it finds the nearest registration of that dependency.
 
 This means you can re-register a dependency on a child injector, and *it* will be injected instead of whatever is registered above it in the chain.
 

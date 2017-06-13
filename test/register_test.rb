@@ -21,13 +21,8 @@ class RegisterTest < Minitest::Test
     assert_equal 'Foo', @injector[:foo].message
   end
 
-  def test_register_alt_syntax
-    @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
-    assert_equal 'Foo', @injector[:foo].message
-  end
-
-  def test_singleton_by_defeault
-    @injector[:foo] = -> { OpenStruct.new(message: 'Foo') }
+  def test_singleton
+    @injector.singleton(:foo) { OpenStruct.new(message: 'Foo') }
     id1, id2 = @injector[:foo].object_id, @injector[:foo].object_id
     assert_equal id1, id2
   end
