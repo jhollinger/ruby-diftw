@@ -1,4 +1,4 @@
-# DiFtw
+# DiFtw [![Build Status](https://travis-ci.org/jhollinger/ruby-diftw.svg?branch=master)](https://travis-ci.org/jhollinger/ruby-diftw)
 
 Dependency Injection For The Win! A small, yet surprisingly powerful, dependency injection library for Ruby.
 
