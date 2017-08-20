@@ -41,7 +41,7 @@ module DiFtw
     #
     def initialize(parent: nil, &registrator)
       @registry, @parent = {}, parent
-      instance_eval &registrator if registrator
+      instance_eval(&registrator) if registrator
     end
 
     #

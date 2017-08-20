@@ -20,6 +20,7 @@ module DiFtw
       @y = y
       @singleton = singleton
       @mutex = Mutex.new if singleton
+      @val = nil
     end
 
     #
