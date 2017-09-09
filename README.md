@@ -9,9 +9,9 @@ If your only concern is testing, mocks/stubs and `webmock` might be all you need
 ### Features
 
 * DI container w/dead-simple registration
+* Inject singletons or factories
 * Lazy injection (by default)
 * Inject into each of a class's instances, a single instance, a class itself, or a module
-* Inject singletons or factories
 * Uses parent-child injectors for max flexibility
 * Threadsafe, after registration
 
@@ -88,19 +88,6 @@ Lazy injection is usually fine. But if it isn't, use `inject!`:
     end
     puts SomeModule.baz.message
     => 'Baz'
-
-## Optionally injects singletons
-
-    DI = DiFtw::Injector.new do
-      singleton :bar do
-        OpenStruct.new(message: 'Bar')
-      end
-    end
-
-    Widget.new.bar.object_id == Widget.new.bar.object_id
-    => true
-
-Accessing injected singletons **is thread safe**. However, registering them is not.
 
 ## Parent-Child injectors
 
