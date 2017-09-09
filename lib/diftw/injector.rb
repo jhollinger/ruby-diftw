@@ -8,21 +8,21 @@ module DiFtw
   #   DI = DiFtw::Injector.new
   #
   #   # You can call register on the Injector object
-  #   DI.register :bar do
+  #   DI.singleton :bar do
   #     Bar.new
   #   end
   #
-  #   # Or you can assign a Proc to the Injector object like a Hash
-  #   DI[:baz] = -> { Baz.new }
+  #   # Or you can pass a Proc
+  #   DI.singleton :baz, -> { Baz.new }
   #
   # Alternatively, you can pass a block to the initializer and register your depencies right inside it:
   #
   #   DI = DiFtw::Injector.new do
-  #     register :foo do
+  #     singleton :foo do
   #       Foo.new
   #     end
   #
-  #     register(:bar) { Bar }
+  #     singleton :bar, -> { Bar }
   #   end
   #
   class Injector
@@ -45,24 +45,6 @@ module DiFtw
     end
 
     #
-    # Register a new dependency by passing a Proc or a block.
-    #
-    #   DI.register :foo do
-    #     Foo
-    #   end
-    #
-    #   DI.register :bar, -> { Bar }
-    #
-    # @param name [Symbol] name of the dependency
-    # @param y [Proc] the dependency wrapped in a Proc or block
-    # @return [DiFtw::Injector] returns the Injector object
-    #
-    def register(name, y = nil, &block)
-      registry[name] = Dependency.new(y || block, singleton: false)
-      self
-    end
-
-    #
     # Register a new dependency as a singleton. The proc will only be called
     # the first time, then the returned value will be stored and returned for
     # subsequent injections. Threadsafe.
@@ -78,7 +60,26 @@ module DiFtw
     # @return [DiFtw::Injector] returns the Injector object
     # 
     def singleton(name, y = nil, &block)
-      registry[name] = Dependency.new(y || block, singleton: true)
+      registry[name] = Singleton.new(y || block)
+      self
+    end
+
+    #
+    # Register a new dependency by passing a Proc or a block. Each time you
+    # inject it, the block/Proc will be re-run and you'll get the result.
+    #
+    #   DI.factory :foo do
+    #     Foo
+    #   end
+    #
+    #   DI.factory :bar, -> { Bar }
+    #
+    # @param name [Symbol] name of the dependency
+    # @param y [Proc] the dependency wrapped in a Proc or block
+    # @return [DiFtw::Injector] returns the Injector object
+    #
+    def factory(name, y = nil, &block)
+      registry[name] = Factory.new(y || block)
       self
     end
 

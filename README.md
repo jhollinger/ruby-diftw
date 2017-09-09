@@ -11,27 +11,30 @@ If your only concern is testing, mocks/stubs and `webmock` might be all you need
 * DI container w/dead-simple registration
 * Lazy injection (by default)
 * Inject into each of a class's instances, a single instance, a class itself, or a module
-* Optionally injects singletons
+* Inject singletons or factories
 * Uses parent-child injectors for max flexibility
-* Threadsafe, except for registration
+* Threadsafe, after registration
 
 ## Dead-simple registration API
 
     # Create your root injector/container
     DI = DiFtw::Injector.new do
-      # Register some dependencies in here
-      register :foo do
-        OpenStruct.new(message: "Foo")
+      singleton :foo do
+        OpenStruct.new(message: "Everyone will get this same object")
+      end
+
+      factory :bar do
+        OpenStruct.new(message: "Everyone will get a NEW version of this object")
       end
     end
 
-    # Or register them out here
-    DI.register :bar do
+    # Or register things out here
+    DI.singleton :zorp do
       OpenStruct.new(message: "Bar")
     end
 
-    # Or register them with procs
-    DI[:baz] = -> { OpenStruct.new(message: "Baz") }
+    # Or use a Proc
+    DI.factory :xyz, -> { OpenStruct.new(message: "XYZ") }
 
 ## Lazy injection (by default)
 
@@ -107,7 +110,7 @@ This means you can re-register a dependency on a child injector, and *it* will b
 
     # Create your root injector and register :foo
     DI = DiFtw::Injector.new
-    DI[:foo] = -> { 'Foo' }
+    DI.singleton :foo, -> { 'Foo' }
     
     class Widget
       include DI.inject :foo
@@ -143,7 +146,7 @@ This means you can re-register a dependency on a child injector, and *it* will b
     
     # But we could re-register/override :foo in Spline.injector, and all new
     # Spline instances would resolve :foo differently.
-    Spline.injector[:foo] = -> { 'Bar' }
+    Spline.injector.singleton :foo, -> { 'Bar' }
     Spline.new.foo
     => 'Bar'
     # But DI and Widget.injector would be unchanged
@@ -153,7 +156,7 @@ This means you can re-register a dependency on a child injector, and *it* will b
     # We can go even further and override :foo in just one specific instance of Spline
     # NOTE This only works if you're using lazy injection (the default) AND if you haven't called #foo yet
     s = Spline.new
-    s.injector[:foo] = -> { 'Baz' }
+    s.injector.singleton :foo, -> { 'Baz' }
     s.foo
     => 'Baz'
     # Other Spline instances will still get their override from Spline.injector
@@ -167,13 +170,13 @@ This means you can re-register a dependency on a child injector, and *it* will b
 
 To inject different dependencies in these environments, you have several options. You can simply re-register dependencies in your root injector:
 
-    DI[:foo] = -> { OpenStruct.new(message: 'Test Foo') }
+    DI.singleton :foo, -> { OpenStruct.new(message: 'Test Foo') }
     
 And/Or you can use the parent-child injector features described above to great effect:
 
     before :each do
       # Give all MyService instances 'Test foo' as #foo
-      MyService.injector[:foo] = -> {
+      MyService.injector.singleton :foo, -> {
         'Test foo'
       }
     end

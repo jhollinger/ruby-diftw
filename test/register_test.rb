@@ -5,17 +5,17 @@ class RegisterTest < Minitest::Test
     @injector = DiFtw::Injector.new
   end
 
-  def test_register_during_initialize
+  def test_singleton_during_initialize
     injector = DiFtw::Injector.new do
-      register :foo do
+      singleton :foo do
         OpenStruct.new(message: 'Foo')
       end
     end
     assert_equal 'Foo', injector[:foo].message
   end
 
-  def test_register_after_initialize
-    @injector.register :foo do
+  def test_singleton_after_initialize
+    @injector.singleton :foo do
       OpenStruct.new(message: 'Foo')
     end
     assert_equal 'Foo', @injector[:foo].message

@@ -1,4 +1,5 @@
 require 'diftw/injector'
-require 'diftw/dependency'
+require 'diftw/singleton'
+require 'diftw/factory'
 require 'diftw/builder'
 require 'diftw/version'

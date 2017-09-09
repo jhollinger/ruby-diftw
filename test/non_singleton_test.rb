@@ -3,7 +3,7 @@ require_relative './test_helper'
 class NonSingletonTest < Minitest::Test
   def setup
     @injector = DiFtw::Injector.new
-    @injector.register(:foo) { OpenStruct.new(message: 'Foo') }
+    @injector.factory(:foo) { OpenStruct.new(message: 'Foo') }
   end
 
   def test_different_object_each_call
