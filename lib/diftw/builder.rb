@@ -35,22 +35,17 @@ module DiFtw
               end
               nil
             end
-
-            # Define instance accessor methods
-            di_mod._diftw_dependencies.each do |dep|
-              define_method dep do
-                var = "@_diftw_#{dep}"
-                instance_variable_get(var) || instance_variable_set(var, self.injector[dep])
-              end
-            end
           end
+
+          # Define instance accessor methods. Do as a string so we get/set instance variables directly.
+          base.class_eval _diftw_dependencies.map { |dep|
+            "def #{dep}; @_diftw_#{dep} ||= self.injector[:#{dep}]; end"
+          }.join $/
         end
 
         def self.extended(base)
           di_mod = self
-          base.singleton_class.class_eval do
-            include di_mod
-          end
+          base.singleton_class.class_eval { include di_mod }
         end
       }.tap { |mod|
         mod.injector = Injector.new(parent: parent_injector)
