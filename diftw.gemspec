@@ -4,7 +4,7 @@ require File.expand_path('../lib/diftw/version.rb', __FILE__)
 Gem::Specification.new do |gem|
   gem.name = 'diftw'
   gem.version = DiFtw::VERSION
-  gem.date = '2017-09-15'
+  gem.date = '2017-09-18'
 
   gem.description = 'A small dependency injection library for Ruby'
   gem.summary = 'Dependency Injection For The Win!'
