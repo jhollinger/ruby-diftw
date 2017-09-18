@@ -20,11 +20,12 @@ class InjectorTest < Minitest::Test
   end
 
   def test_lazy_registration
-    @injector.singleton(:ab) { @injector[:a] + @injector[:b] }
-    @injector.singleton(:a) { 'A' }
-    @injector.singleton(:b) { 'B' }
+    injector = @injector
+    injector.singleton(:ab) { injector[:a] + injector[:b] }
+    injector.singleton(:a) { 'A' }
+    injector.singleton(:b) { 'B' }
     klass = Class.new
-    klass.send(:include, @injector.inject(:ab))
+    klass.send(:include, injector.inject(:ab))
     assert_equal 'AB', klass.new.ab
   end
 

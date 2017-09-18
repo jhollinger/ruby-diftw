@@ -17,7 +17,7 @@ module DiFtw
     # Return the value for the dependency by calling the registration Proc.
     #
     def resolve
-      @y.()
+      @y.call
     end
   end
 end

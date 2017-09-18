@@ -19,7 +19,7 @@ module DiFtw
     # will be cached and re-used for later injections. Yes, it's thread-safe.
     #
     def resolve
-      @val || @mutex.synchronize { @val ||= @y.() }
+      @val || @mutex.synchronize { @val ||= @y.call }
     end
   end
 end

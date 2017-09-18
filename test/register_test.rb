@@ -26,4 +26,13 @@ class RegisterTest < Minitest::Test
     id1, id2 = @injector[:foo].object_id, @injector[:foo].object_id
     assert_equal id1, id2
   end
+
+  def test_singleton_with_deps
+    @injector.singleton :foobar, [:foo, :bar] do
+      foo + bar
+    end
+    @injector.singleton(:foo) { "foo" }
+    @injector.singleton(:bar) { "bar" }
+    assert_equal "foobar", @injector[:foobar]
+  end
 end

@@ -12,17 +12,12 @@ module DiFtw
   #     Bar.new
   #   end
   #
-  #   # Or you can pass a Proc
-  #   DI.singleton :baz, -> { Baz.new }
-  #
   # Alternatively, you can pass a block to the initializer and register your depencies right inside it:
   #
   #   DI = DiFtw::Injector.new do
   #     singleton :foo do
   #       Foo.new
   #     end
-  #
-  #     singleton :bar, -> { Bar }
   #   end
   #
   class Injector
@@ -53,14 +48,14 @@ module DiFtw
     #     Foo
     #   end
     #
-    #   DI.singleton :bar, -> { Bar }
-    #
     # @param name [Symbol] name of the dependency
+    # @param deps [Array<Symbol>] Array of dependencies to inject into the provider block
     # @param y [Proc] the dependency wrapped in a Proc or block
     # @return [DiFtw::Injector] returns the Injector object
     # 
-    def singleton(name, y = nil, &block)
-      registry[name] = Singleton.new(y || block)
+    def singleton(name, deps = [], &y)
+      provider = Provider.new(self, name, y, deps)
+      registry[name] = Singleton.new(provider)
       self
     end
 
@@ -72,14 +67,14 @@ module DiFtw
     #     Foo
     #   end
     #
-    #   DI.factory :bar, -> { Bar }
-    #
     # @param name [Symbol] name of the dependency
+    # @param deps [Array<Symbol>] Array of dependencies to inject into the provider block
     # @param y [Proc] the dependency wrapped in a Proc or block
     # @return [DiFtw::Injector] returns the Injector object
     #
-    def factory(name, y = nil, &block)
-      registry[name] = Factory.new(y || block)
+    def factory(name, deps = [], &y)
+      provider = Provider.new(self, name, y, deps)
+      registry[name] = Factory.new(provider)
       self
     end
 
